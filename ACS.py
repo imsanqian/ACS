@@ -56,6 +56,8 @@ def selectInMain():
     match selected:
         case 1:
             selectInAdmin()
+        case 2:
+            acscursor.execute()
         case 9:
             print("Good Bye!")
             exit()
@@ -72,8 +74,8 @@ def selectInAdmin():
         case 0:
             selectInMain()
         case 1:
-            result = selectAllFromDB("Readers")
-            print("-----Card Readers------")
+            result = selectAllFromDB("Doors")
+            print("----- Doors------")
             print("ID\tAccess Groups\tAccess Users")
             for x in result:
                 print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2]))
@@ -90,16 +92,16 @@ def selectInAdmin():
             for x in result:
                 print(str(x[0])+"\t"+str(x[1]))
         case 5:
-            print("---Create a Card Reader---")
+            print("---Create a  Door---")
             print("You have to enter the group ids which have access to pass this door\n\
 Leave it blank if you want to cancel")
             groups = input("Groups that has access: ")
             if len(groups) != 0:
-                acscursor.execute(f"CALL addReader((SELECT JSON_ARRAY({groups})))")
+                acscursor.execute(f"CALL addDoor((SELECT JSON_ARRAY({groups})))")
                 acsDB.commit()
-                acscursor.execute("SELECT * FROM readers ORDER BY `readerID` DESC LIMIT 1;")
+                acscursor.execute("SELECT * FROM Doors ORDER BY `DoorID` DESC LIMIT 1;")
                 result = acscursor.fetchone()
-                print("A new reader created: "+str(result))
+                print("A new Door created: "+str(result))
         case 6:
             print("---Add a User---")
             print("You have to enter user name and the group ids which this user is assigned to\n\
@@ -124,6 +126,27 @@ Leave it blank if you want to cancel")
                 acscursor.execute("SELECT * FROM rolegroups ORDER BY `groupID` DESC LIMIT 1;")
                 result = acscursor.fetchone()
                 print("A new role added: "+str(result))
+        case 8:
+            print("---Remove a Door---")
+            print("Write All if you want to remove all doors\n\
+Leave it blank if you want to cancel")
+            tid = input("Door id: ")
+            if len(tid) != 0:
+                acscursor.execute("DELETE FROM doors "+("" if tid.lower() == "all" else f"WHERE doorID = {tid}"))
+        case 9:
+            print("---Remove a User---")
+            print("Write All if you want to remove all users\n\
+Leave it blank if you want to cancel")
+            tid = input("User id: ")
+            if len(tid) != 0:
+                acscursor.execute("DELETE FROM users "+("" if tid.lower() == "all" else f"WHERE userID = {tid}"))
+        case 10:
+            print("---Remove a Role---")
+            print("Write All if you want to remove all roles\n\
+Leave it blank if you want to cancel")
+            tid = input("Role id: ")
+            if len(tid) != 0:
+                acscursor.execute("DELETE FROM RoleGroups "+("" if tid.lower() == "all" else f"WHERE groupID = {tid}"))
         case _:
             print("Unkown choise, select again")
     selectInAdmin()
@@ -138,14 +161,14 @@ def printMainMenu():
 def printAdminMenu():
     print("-----------Admin Menu------------")
     print(C_PURPLE+"0. Previous Menu"+C_WHITE)
-    print("1. Show all Card Readers")
+    print("1. Show all  Doors")
     print("2. Show all Users")
     print("3. Show all Roles")
     print("4. Search Log")
-    print("5. Create Card Reader")
+    print("5. Create  Door")
     print("6. Create User")
     print("7. Create Role")
-    print(C_RED+"8. Delete Card Reader")
+    print(C_RED+"8. Delete  Door")
     print("9. Delete User")
     print("10. Delete Role"+C_WHITE)
     print("-------------------------------")
