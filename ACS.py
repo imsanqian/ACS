@@ -4,6 +4,7 @@ import mysql.connector
 C_WHITE = "\033[37m"
 C_PURPLE = "\033[95m"
 C_RED = "\033[91m"
+C_GREEN = "\033[92m"
 
 def connectDB():
     try:
@@ -57,7 +58,22 @@ def selectInMain():
         case 1:
             selectInAdmin()
         case 2:
-            acscursor.execute()
+            did = input("Witch door are you passing? Doorid: ")
+            print("You can enter your UID or Name")
+            inp = input("uid/name: ")
+            hasAccess = False
+            if(str.isdigit(inp)):
+                acscursor.execute(f"CALL showUserGroupsWithPermission({inp},{did})")
+                result = acscursor.fetchall()
+                acscursor.close()
+                for x in result:
+                    if x[1]:
+                        hasAccess = True
+                        break
+                connectDB()
+                print(((C_GREEN+"Door is unlocked") if hasAccess else (C_RED+"You do not have access"))+C_WHITE)
+                acscursor.execute(f"CALL insertLog({did},{inp},{1 if hasAccess else 0})")
+                acsDB.commit()
         case 9:
             print("Good Bye!")
             exit()
@@ -91,6 +107,8 @@ def selectInAdmin():
             print("ID\tRole Name")
             for x in result:
                 print(str(x[0])+"\t"+str(x[1]))
+        case 4:
+            selectInLogs()
         case 5:
             print("---Create a  Door---")
             print("You have to enter the group ids which have access to pass this door\n\
@@ -151,6 +169,68 @@ Leave it blank if you want to cancel")
             print("Unkown choise, select again")
     selectInAdmin()
 
+def selectInLogs():
+    printLogsMenu()
+    selected = input("> ") 
+    selected = int(selected) if selected.isdigit() else -1
+    match selected:
+        case 0:
+            selectInAdmin()
+        case 1:
+            result = selectAllFromDB("logs")
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4]))
+        case 2:
+            sDate = input("Start Date: ")
+            eDate = input("End Date: ")
+            acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logTime BETWEEN '{sDate}' AND '{eDate}'")
+            result = acscursor.fetchall()
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time\t\tUser Name")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
+        case 3:
+            acscursor.execute("SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`accessGranted` = 0")
+            result = acscursor.fetchall()
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time\t\tUser Name")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
+        case 4:
+            did = input("Door ID: ")
+            acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`doorID` = {did}")
+            result = acscursor.fetchall()
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time\t\tUser Name")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
+        case 5:
+            uid = input("User ID: ")
+            acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`userID` = {uid}")
+            result = acscursor.fetchall()
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time\t\tUser Name")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
+        case 6:
+            gid = input("Role ID: ")
+            acscursor.execute(f"\
+SELECT logs.*,rolegroups.`groupName`,users.`userName` FROM logs \
+INNER JOIN users ON users.`userID` = logs.`userID`\
+INNER JOIN rolegroups ON rolegroups.`groupID` = {gid} AND {gid} MEMBER OF((SELECT `groupIDs` FROM users WHERE `userID` = logs.`userID`));")
+            result = acscursor.fetchall()
+            print("----------------------------Logs--------------------------------")
+            print("ID\tDoor ID\tUser ID\tAccess Granted\tLog Time\t\tRole Name\tUser Name")
+            for x in result:
+                print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5])+"\t\t"+str(x[6]))
+        case 7:
+            dt = input("The date(Blank if all): ")
+            acscursor.execute("DELETE FROM logs WHERE `logTime`<"+(("'"+dt+"'") if len(dt) else "NOW()"))
+        case _:
+            print("Unkown choise, select again")
+            selectInLogs()
 def printMainMenu():
     print("-----------Menu------------")
     print("1. Administrator Panel")
@@ -172,6 +252,17 @@ def printAdminMenu():
     print("9. Delete User")
     print("10. Delete Role"+C_WHITE)
     print("-------------------------------")
+
+def printLogsMenu():
+    print("-----Search the logs-------")
+    print(C_PURPLE+"0. Previous Menu"+C_WHITE)
+    print("1. All logs")
+    print("2. Between dates")
+    print("3. All ungranted")
+    print("4. All of a door")
+    print("5. All of an user")
+    print("6. All of a role")
+    print(C_RED+"7. Delete logs before date"+C_WHITE)
 
 def selectAllFromDB(tbName:str):
     acscursor.execute("SELECT * FROM "+tbName)

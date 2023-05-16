@@ -80,9 +80,9 @@ DELIMITER ;
 
 DROP Procedure IF EXISTS insertLog;
 DELIMITER $$
-CREATE PROCEDURE insertLog(IN rID INT,IN granted BOOLEAN)
+CREATE PROCEDURE insertLog(IN rID INT,IN uID INT,IN granted BOOLEAN)
 BEGIN
-INSERT INTO logs VALUES(NULL,rID,granted);
+INSERT INTO logs VALUES(NULL,rID,uID,granted,NULL);
 END $$
 DELIMITER ;
 
@@ -172,6 +172,12 @@ SELECT * FROM users;
 SELECT * FROM tmpGroup;
 SELECT * FROM doors;
 SELECT `accessGroups` FROM doors WHERE `doorID` = 1;
-CALl showUserGroupsWithPermission(1,2);
+CALL showUserGroupsWithPermission(1,2);
 SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')),tmp.* FROM users INNER JOIN
 (SELECT COUNT(*) FROM doors WHERE (SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')) FROM users WHERE `userID` = 1) MEMBER OF ((SELECT `accessGroups` FROM doors WHERE `doorID` = 1)) and `doorID` = 1) AS tmp;
+
+CALL insertLog(1,3,1);
+SELECT logs.*,rolegroups.`groupName`,users.`userName` FROM logs 
+INNER JOIN users ON users.`userID` = logs.`userID`
+INNER JOIN rolegroups ON rolegroups.`groupID` = 3 AND 3 MEMBER OF((SELECT `groupIDs` FROM users WHERE `userID` = logs.`userID`));
+SELECT * FROM users;
