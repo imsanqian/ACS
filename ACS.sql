@@ -180,4 +180,4 @@ CALL insertLog(1,3,1);
 SELECT logs.*,rolegroups.`groupName`,users.`userName` FROM logs 
 INNER JOIN users ON users.`userID` = logs.`userID`
 INNER JOIN rolegroups ON rolegroups.`groupID` = 3 AND 3 MEMBER OF((SELECT `groupIDs` FROM users WHERE `userID` = logs.`userID`));
-SELECT * FROM users;
+SELECT COUNT(*) FROM doors WHERE `doorID` = 1 and 1 MEMBER OF((SELECT `accessUsers` FROM doors WHERE `doorID` = 1));

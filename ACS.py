@@ -62,18 +62,29 @@ def selectInMain():
             print("You can enter your UID or Name")
             inp = input("uid/name: ")
             hasAccess = False
-            if(str.isdigit(inp)):
-                acscursor.execute(f"CALL showUserGroupsWithPermission({inp},{did})")
+            if(not str.isdigit(inp)):
+                acscursor.execute(f"SELECT `userID` FROM users WHERE `userName` = '{inp}'")
+                inp = int(acscursor.fetchone()[0])
+            acscursor.execute(f"CALL showUserGroupsWithPermission({inp},{did})")
+            result = acscursor.fetchall()
+            acscursor.close()
+            for x in result:
+                if x[1]:
+                    hasAccess = True
+                    break
+            connectDB()
+            if not hasAccess:
+                acscursor.execute(f"SELECT COUNT(*) FROM doors WHERE `doorID` = {did} and {inp} MEMBER OF((SELECT `accessUsers` FROM doors WHERE `doorID` = {did}))")
                 result = acscursor.fetchall()
                 acscursor.close()
                 for x in result:
-                    if x[1]:
+                    if x[0]:
                         hasAccess = True
                         break
                 connectDB()
-                print(((C_GREEN+"Door is unlocked") if hasAccess else (C_RED+"You do not have access"))+C_WHITE)
-                acscursor.execute(f"CALL insertLog({did},{inp},{1 if hasAccess else 0})")
-                acsDB.commit()
+            print(((C_GREEN+"Door is unlocked") if hasAccess else (C_RED+"You do not have access"))+C_WHITE)
+            acscursor.execute(f"CALL insertLog({did},{inp},{1 if hasAccess else 0})")
+            acsDB.commit()
         case 9:
             print("Good Bye!")
             exit()
@@ -231,6 +242,7 @@ INNER JOIN rolegroups ON rolegroups.`groupID` = {gid} AND {gid} MEMBER OF((SELEC
         case _:
             print("Unkown choise, select again")
             selectInLogs()
+
 def printMainMenu():
     print("-----------Menu------------")
     print("1. Administrator Panel")
@@ -267,5 +279,6 @@ def printLogsMenu():
 def selectAllFromDB(tbName:str):
     acscursor.execute("SELECT * FROM "+tbName)
     return acscursor.fetchall()
+
 main()
 
