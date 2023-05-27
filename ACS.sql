@@ -97,7 +97,6 @@ BEGIN
     RETURN ret;
 END $$
 DELIMITER ;
-
 DROP FUNCTION IF EXISTS groupHasAccess;
 DELIMITER $$
 CREATE FUNCTION groupHasAccess(rID INT, gID INT)
@@ -120,13 +119,13 @@ BEGIN
     RETURN ret;
 END $$
 DELIMITER ;
---CALL addDoor((SELECT JSON_ARRAY(1,2,3,4)));
 
-SELECT * FROM doors;
+
+/* SELECT * FROM doors;
 SELECT * FROM users;
 SELECT * FROM rolegroups;
 
-SELECT * FROM doors INNER JOIN users ON users.`groupIDs` MEMBER OF(doors.`accessGroups`);
+SELECT * FROM doors INNER JOIN users ON users.`groupIDs` MEMBER OF(doors.`accessGroups`); */
 
 DROP PROCEDURE IF EXISTS showUserGroups;
 DELIMITER $$
@@ -167,17 +166,8 @@ BEGIN
     DROP TEMPORARY TABLE tmpGroup;
 END $$
 DELIMITER ;
-CALL `showUserGroups`(1);
-SELECT * FROM users;
-SELECT * FROM tmpGroup;
-SELECT * FROM doors;
-SELECT `accessGroups` FROM doors WHERE `doorID` = 1;
-CALL showUserGroupsWithPermission(1,2);
-SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')),tmp.* FROM users INNER JOIN
-(SELECT COUNT(*) FROM doors WHERE (SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')) FROM users WHERE `userID` = 1) MEMBER OF ((SELECT `accessGroups` FROM doors WHERE `doorID` = 1)) and `doorID` = 1) AS tmp;
+/* SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')),tmp.* FROM users INNER JOIN
+(SELECT COUNT(*) FROM doors WHERE (SELECT JSON_EXTRACT(`groupIDs`,CONCAT('$[0]')) FROM users WHERE `userID` = 1) MEMBER OF ((SELECT `accessGroups` FROM doors WHERE `doorID` = 1)) and `doorID` = 1) AS tmp; */
 
-CALL insertLog(1,3,1);
-SELECT logs.*,rolegroups.`groupName`,users.`userName` FROM logs 
-INNER JOIN users ON users.`userID` = logs.`userID`
-INNER JOIN rolegroups ON rolegroups.`groupID` = 3 AND 3 MEMBER OF((SELECT `groupIDs` FROM users WHERE `userID` = logs.`userID`));
-SELECT COUNT(*) FROM doors WHERE `doorID` = 1 and 1 MEMBER OF((SELECT `accessUsers` FROM doors WHERE `doorID` = 1));
+
+

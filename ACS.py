@@ -74,7 +74,9 @@ def selectInMain():
                     break
             connectDB()
             if not hasAccess:
-                acscursor.execute(f"SELECT COUNT(*) FROM doors WHERE `doorID` = {did} and {inp} MEMBER OF((SELECT `accessUsers` FROM doors WHERE `doorID` = {did}))")
+                acscursor.execute(f"SELECT COUNT(*) FROM doors WHERE `doorID` = \
+                                  {did} and {inp} MEMBER OF((SELECT\
+                                   `accessUsers` FROM doors WHERE `doorID` = {did}))")
                 result = acscursor.fetchall()
                 acscursor.close()
                 for x in result:
