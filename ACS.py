@@ -27,23 +27,6 @@ def connectDB():
         print("The database is broken, please recreate the database with the ACS.sql file!")
         exit()
 
-# acscursor.execute("CALL addRole('Skolledning')")
-# acscursor.execute("CALL addRole('Teacher')")
-# acscursor.execute("CALL addRole('Student')")
-# acsDB.commit()
-# acscursor.execute('SELECT * FROM `RoleGroups`')
-# result = acscursor.fetchall()
-# for x in result:
-#     print(x)
-# acscursor.execute("CALL addUser('Christian Nordahl',JSON_ARRAY(1,2))")
-# acscursor.execute("CALL addUser('Anders Carlsson',JSON_ARRAY(2))")
-# acscursor.execute("CALL addUser('Xiao Zhu',JSON_ARRAY(3))")
-# acsDB.commit()
-# acscursor.execute('SELECT userAssignedGroups(1)')
-# result = acscursor.fetchone()
-# print(tuple(json.loads(result[0])))
-#main()
-
 def main():
     connectDB()
     print("*This project is in purpose of application of Mysql")
@@ -198,6 +181,7 @@ def selectInLogs():
         case 2:
             sDate = input("Start Date: ")
             eDate = input("End Date: ")
+            #Query, fetch the log data between the dates
             acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logTime BETWEEN '{sDate}' AND '{eDate}'")
             result = acscursor.fetchall()
             print("----------------------------Logs--------------------------------")
@@ -205,6 +189,7 @@ def selectInLogs():
             for x in result:
                 print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
         case 3:
+            #Query, fetch the log data that the granted is false, the user had no access
             acscursor.execute("SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`accessGranted` = 0")
             result = acscursor.fetchall()
             print("----------------------------Logs--------------------------------")
@@ -213,6 +198,7 @@ def selectInLogs():
                 print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
         case 4:
             did = input("Door ID: ")
+            #Query, search for door id.
             acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`doorID` = {did}")
             result = acscursor.fetchall()
             print("----------------------------Logs--------------------------------")
@@ -221,6 +207,7 @@ def selectInLogs():
                 print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
         case 5:
             uid = input("User ID: ")
+            # query, search for user id
             acscursor.execute(f"SELECT logs.*,users.`userName` FROM logs INNER JOIN users ON users.`userID` = logs.`userID` AND logs.`userID` = {uid}")
             result = acscursor.fetchall()
             print("----------------------------Logs--------------------------------")
@@ -229,6 +216,7 @@ def selectInLogs():
                 print(str(x[0])+"\t"+str(x[1])+"\t"+str(x[2])+"\t"+str(x[3])+"\t\t"+str(x[4])+"\t"+str(x[5]))
         case 6:
             gid = input("Role ID: ")
+            # Query with multiple tables, search logs with the given role id and show the user name
             acscursor.execute(f"\
 SELECT logs.*,rolegroups.`groupName`,users.`userName` FROM logs \
 INNER JOIN users ON users.`userID` = logs.`userID`\
